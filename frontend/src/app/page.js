@@ -4,6 +4,8 @@ import { redirect, useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import Papa from "papaparse";
 import CheckBox from "@/components/CheckBox";
+import { BiSelectMultiple } from "react-icons/bi";
+import { VscClearAll } from "react-icons/vsc";
 
 export default function Home() {
   const [file, setFile] = useState(null);
@@ -185,24 +187,25 @@ export default function Home() {
               value={filtered}
               onChange={(e) => setFiltered(e.target.value)}
             />
-
             <h2 className="text-lg">Please select the logs you want:</h2>
-            {checkedItems.length !== logs.length ? (
-              <button
-                className="cursor-pointer p-2 border-1 border-solid rounded-md bg-blue-500 text-white"
-                onClick={() => setCheckedItems(logs)}
-              >
-                Select All
-              </button>
-            ) : (
-              <button
-                className="cursor-pointer p-2 border-1 border-solid rounded-md bg-red-500 text-white"
-                onClick={() => setCheckedItems([])}
-              >
-                Clear All
-              </button>
-            )}
-            {console.log(checkedItems)}
+            <div className="flex gap-x-4">
+              <div className="flex gap-x-2">
+                <BiSelectMultiple
+                  size={25}
+                  className="cursor-pointer hover:text-slate-400"
+                  onClick={() => setCheckedItems(logs)}
+                />
+                <h2>Select All</h2>
+              </div>
+              <div className="flex gap-x-2">
+                <VscClearAll
+                  size={25}
+                  className="cursor-pointer hover:text-slate-400"
+                  onClick={() => setCheckedItems([])}
+                />
+                <h2>Clear All</h2>
+              </div>
+            </div>
             {filterdLogs.map((log) => (
               <div key={log} className="flex gap-x-3 items-center">
                 <CheckBox
