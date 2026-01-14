@@ -5,14 +5,15 @@ import { useState, useRef } from "react";
 import Papa from "papaparse";
 import CheckBox from "@/components/CheckBox";
 
-
 export default function Home() {
   const [file, setFile] = useState(null);
   const [downloadUrl, setDownloadUrl] = useState("");
   const fileInputRef = useRef(null);
   const [logs, setLogs] = useState([]);
   const [checkedItems, setCheckedItems] = useState([]);
-  
+  const [filename, setFilename] = useState("");
+  const [filtered, setFiltered] = useState("");
+
   const extractLogOptions = (file) => {
     const reader = new FileReader();
     reader.readAsText(file);
@@ -24,7 +25,7 @@ export default function Home() {
         skipEmptyLines: true,
         complete: (result) => {
           const data = result.data;
-          if (data.length ===  0 || !data[0].Collar) {
+          if (data.length === 0 || !data[0].Collar) {
             alert("Invalid CSV file format");
             return;
           }
@@ -43,7 +44,7 @@ export default function Home() {
               groups[group] = [];
             }
             //console.log(row.Sample_Mass > 0);
-            
+
             groups[group].push(row);
           });
 
@@ -54,7 +55,7 @@ export default function Home() {
 
           // Extract first 'Collar' from each group
           //const logOptionsList = Object.values(groups).map((group) => group[0].Collar);
-          const logOptionsList = filteredGroups.map((group) => group[0].Collar)
+          const logOptionsList = filteredGroups.map((group) => group[0].Collar);
           setLogs(logOptionsList);
         },
       });
@@ -62,19 +63,19 @@ export default function Home() {
   };
 
   const handleCheckboxChange = (log) => {
-    setCheckedItems((prevLogs) =>
-      prevLogs.includes(log)
-        ? prevLogs.filter((item) => item !== log) // Remove if unchecked
-        : [...prevLogs, log] // Add if checked
+    setCheckedItems(
+      (prevLogs) =>
+        prevLogs.includes(log)
+          ? prevLogs.filter((item) => item !== log) // Remove if unchecked
+          : [...prevLogs, log] // Add if checked
     );
   };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
-    setFile(selectedFile);  // Correctly updates the state
+    setFile(selectedFile); // Correctly updates the state
     extractLogOptions(selectedFile); // Use the selectedFile directly
-};
-
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -90,8 +91,9 @@ export default function Home() {
       formData.append("checkedItems", log);
     });
 
+    setFilename(file.name.split(".")[0]);
+
     console.log([...formData]);
-    
 
     try {
       const response = await fetch("http://127.0.0.1:5000/upload", {
@@ -117,30 +119,36 @@ export default function Home() {
     } catch (error) {
       console.error("Error uploading file:", error);
     }
-
   };
 
   const handleDownload = () => {
     setDownloadUrl("");
     window.location.reload();
-  }
+  };
+
+  const filterdLogs = logs.filter((log) =>
+    log.toLowerCase().includes(filtered.toLowerCase())
+  );
 
   return (
     <div className="flex flex-col gap-y-10 min-h-screen justify-center items-center mx-auto">
-     
       <h1 className="m-4 text-xl font-bold">Upload File for Analysis</h1>
       <form onSubmit={handleSubmit} className="flex flex-row gap-4 items-start">
-        <label htmlFor="file-upload" className="bg-blue-500 p-2 rounded-md hover:bg-blue-400 text-white transition">Select File</label>
-        <input id="file-upload" className="hidden" type="file" onChange={handleFileChange} ref={fileInputRef} />
+        <label
+          htmlFor="file-upload"
+          className="bg-blue-500 p-2 rounded-md hover:bg-blue-400 text-white transition"
+        >
+          Select File
+        </label>
+        <input
+          id="file-upload"
+          className="hidden"
+          type="file"
+          onChange={handleFileChange}
+          ref={fileInputRef}
+        />
         <div className="text-sm text-gray-700">
-        {
-          file ? (
-            <span>{file.name}</span>
-          ) : (
-            <span>No File Selected</span>
-          )
-
-        }
+          {file ? <span>{file.name}</span> : <span>No File Selected</span>}
         </div>
         <button
           type="submit"
@@ -156,29 +164,57 @@ export default function Home() {
             <a
               className="bg-blue-500 hover:bg-blue-400 rounded-md p-3 text-center text-white cursor-pointer"
               href={downloadUrl}
-              download="report.html"
+              download={filename + ".html"}
               onClick={handleDownload}
             >
               Download Report
             </a>
           </div>
-         
         </div>
       )}
 
       <div className="p-10">
-              {logs.length > 0 && (
-                <>
-                <h2 className="text-lg">Please select the logs you want:</h2>
-                {logs.map((log) => (
-                  <div key={log} className="flex gap-x-3 items-center">
-                    <h1>{log}</h1>
-                    <CheckBox log={log} checkedItems={checkedItems} handleCheckBoxChange={() => handleCheckboxChange(log)} />
-                  </div>
-                ))}
-                </>
-              )
-                }
+        {logs.length > 0 && (
+          <>
+            <h2>Filter logs:</h2>
+            <input
+              className="border-1 border-solid p-2 rounded-md"
+              type="text"
+              name="filtered"
+              id="filtered"
+              value={filtered}
+              onChange={(e) => setFiltered(e.target.value)}
+            />
+
+            <h2 className="text-lg">Please select the logs you want:</h2>
+            {checkedItems.length !== logs.length ? (
+              <button
+                className="cursor-pointer p-2 border-1 border-solid rounded-md bg-blue-500 text-white"
+                onClick={() => setCheckedItems(logs)}
+              >
+                Select All
+              </button>
+            ) : (
+              <button
+                className="cursor-pointer p-2 border-1 border-solid rounded-md bg-red-500 text-white"
+                onClick={() => setCheckedItems([])}
+              >
+                Clear All
+              </button>
+            )}
+            {console.log(checkedItems)}
+            {filterdLogs.map((log) => (
+              <div key={log} className="flex gap-x-3 items-center">
+                <CheckBox
+                  log={log}
+                  checkedItems={checkedItems}
+                  handleCheckBoxChange={() => handleCheckboxChange(log)}
+                />
+                <h1>{log}</h1>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </div>
   );
