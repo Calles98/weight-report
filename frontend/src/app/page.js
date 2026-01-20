@@ -146,7 +146,7 @@ export default function Home() {
         Upload File for Analysis
       </h1>
       {/* Upload and file section */}
-      <div className="border-1 border-solid border-black rounded-md bg-white w-2/3  p-10">
+      <div className="border-1 border-solid border-black rounded-md bg-white w-2/3 shadow-lg p-10">
         <form onSubmit={handleSubmit} className="">
           <div className="bg-slate-100 border-1 border-dashed rounded-md w-full p-10 items-center text-center">
             <label htmlFor="file-upload">
@@ -221,7 +221,7 @@ export default function Home() {
       {/* Logs selection section */}
       {console.log(file)}
       {file && (
-        <div className="border border-black rounded-md bg-white w-2/3 mx-auto">
+        <div className="border border-black rounded-md bg-white w-2/3 mx-auto shadow-lg">
           {logs.length > 0 && (
             <>
               {/* Header */}
