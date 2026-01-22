@@ -6,7 +6,13 @@ import Papa from "papaparse";
 import CheckBox from "@/components/CheckBox";
 import { BiSelectMultiple } from "react-icons/bi";
 import { VscClearAll } from "react-icons/vsc";
-import { FaFileUpload, FaRegFileAlt, FaSearch } from "react-icons/fa";
+import {
+  FaFileAlt,
+  FaFileUpload,
+  FaRegFileAlt,
+  FaSearch,
+} from "react-icons/fa";
+import { IoMdDownload } from "react-icons/io";
 
 export default function Home() {
   const [file, setFile] = useState(null);
@@ -16,6 +22,7 @@ export default function Home() {
   const [checkedItems, setCheckedItems] = useState([]);
   const [filename, setFilename] = useState("");
   const [filtered, setFiltered] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   const extractLogOptions = (file) => {
     const reader = new FileReader();
@@ -82,6 +89,7 @@ export default function Home() {
   };
 
   const handleSubmit = async (e) => {
+    setIsLoading(true);
     e.preventDefault();
     if (!file) {
       alert("Please select a file!");
@@ -122,6 +130,8 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -141,160 +151,197 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col gap-y-10 min-h-screen justify-center items-center mx-auto bg-slate-100">
-      <h1 className="m-4 text-lg md:text-3xl font-bold">
-        Upload File for Analysis
-      </h1>
-      {/* Upload and file section */}
-      <div className="border-1 border-solid border-black rounded-md bg-white w-2/3 shadow-lg p-10">
-        <form onSubmit={handleSubmit} className="">
-          <div className="bg-slate-100 border-1 border-dashed rounded-md w-full p-10 items-center text-center">
-            <label htmlFor="file-upload">
-              <div className="flex items-center justify-center p-2 m-2 h-20 w-20 mx-auto rounded-full bg-blue-100 cursor-pointer">
-                <FaFileUpload className="text-xl mx-auto" />
-              </div>
-            </label>
-
-            <label
-              htmlFor="file-upload"
-              className="hidden md:block w-1/3 mx-auto bg-blue-500 p-2 rounded-md hover:bg-blue-400 cursor-pointer text-white transition"
-            >
-              Select File
-            </label>
-            <p className="hidden md:block text-slate-400 font-extralight text-xs m-2">
-              or drag and drop CSV files here
-            </p>
-            <input
-              id="file-upload"
-              className="hidden"
-              type="file"
-              onChange={handleFileChange}
-              ref={fileInputRef}
+    <>
+      {/* Loading Spinner */}
+      {isLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md bg-black/30">
+          <svg
+            className="animate-spin h-8 w-8 text-white mr-4"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+              fill="none"
             />
-          </div>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-slate-100 border border-dashed mx-auto rounded-md w-full p-5 m-5">
-            {/* File info */}
-            <div className="flex items-center gap-2 min-w-0">
-              <FaRegFileAlt className="shrink-0" />
-
-              <div className="text-sm text-gray-700 min-w-0">
-                {file ? (
-                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
-                    <span className="truncate max-w-full sm:max-w-xs">
-                      {file.name}
-                    </span>
-                    <span className="text-slate-400 whitespace-nowrap">
-                      ({formatFileSize(file.size)})
-                    </span>
-                  </div>
-                ) : (
-                  <span className="text-slate-400">No file selected</span>
-                )}
-              </div>
-            </div>
-
-            {/* Button */}
-            <button
-              type="submit"
-              className="w-full md:w-auto bg-slate-500 text-white px-4 py-2 rounded-md hover:cursor-pointer"
-            >
-              Upload and Process
-            </button>
-          </div>
-        </form>
-        {downloadUrl && (
-          <div className="text-xl font-thin">
-            <h2>Download your processed report:</h2>
-            <div className="mt-5 text-center">
-              <a
-                className="bg-blue-500 hover:bg-blue-400 rounded-md p-3 text-center text-white cursor-pointer"
-                href={downloadUrl}
-                download={filename + ".html"}
-                onClick={handleDownload}
-              >
-                Download Report
-              </a>
-            </div>
-          </div>
-        )}
-      </div>
-      {/* Logs selection section */}
-      {console.log(file)}
-      {file && (
-        <div className="border border-black rounded-md bg-white w-2/3 mx-auto shadow-lg">
-          {logs.length > 0 && (
-            <>
-              {/* Header */}
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pt-5 px-3 pb-6 w-full">
-                <h2 className="text-lg sm:text-xl font-bold">
-                  Select logs for analysis
-                </h2>
-
-                <div className="relative w-full md:w-64">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-                  <input
-                    className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 bg-slate-100"
-                    type="text"
-                    placeholder="Filter logs..."
-                    value={filtered}
-                    onChange={(e) => setFiltered(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="border-b pt-4 px-4 pb-4 w-full text-xs bg-slate-100">
-                <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                  <div
-                    className="flex items-center gap-2 text-base sm:text-lg hover:text-blue-500 cursor-pointer"
-                    onClick={() => setCheckedItems(logs)}
-                  >
-                    <BiSelectMultiple />
-                    <h2>Select All</h2>
-                  </div>
-
-                  <div
-                    className="flex items-center gap-2 text-base sm:text-lg hover:text-blue-500 cursor-pointer"
-                    onClick={() => setCheckedItems([])}
-                  >
-                    <VscClearAll />
-                    <h2>Clear All</h2>
-                  </div>
-                </div>
-              </div>
-
-              {/* Log list */}
-              <div className="max-h-64 overflow-y-auto border-b px-4 sm:px-8 min-h-0">
-                {filterdLogs.map((log) => (
-                  <div key={log} className="flex gap-x-3 items-center py-1">
-                    <CheckBox
-                      log={log}
-                      checkedItems={checkedItems}
-                      handleCheckBoxChange={() => handleCheckboxChange(log)}
-                    />
-                    <h1 className="truncate text-sm sm:text-base">{log}</h1>
-                  </div>
-                ))}
-              </div>
-
-              {/* Footer */}
-              <div className="flex justify-end p-4">
-                <p
-                  className="p-2 text-base sm:text-lg cursor-pointer hover:text-blue-500 hover:underline"
-                  onClick={() => setFile(null)}
-                >
-                  Cancel
-                </p>
-              </div>
-            </>
-          )}
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+            />
+          </svg>
+          <span className="text-white text-lg font-semibold">
+            Processing...
+          </span>
         </div>
       )}
-      <footer className="p-5 w-full sticky bottom-0 bg-slate-100">
-        <p className="text-center text-slate-400 font-extralight text-sm">
-          &copy; 2024 Your Company. All rights reserved.
-        </p>
-      </footer>
-    </div>
+
+      <div className="flex flex-col gap-y-10 min-h-screen justify-center items-center mx-auto bg-slate-100">
+        <h1 className="m-4 text-lg md:text-3xl font-bold">
+          Upload File for Analysis
+        </h1>
+        {/* Upload and file section */}
+        <div className="border-1 border-solid border-black rounded-md bg-white w-2/3 shadow-lg p-10">
+          <form onSubmit={handleSubmit} className="">
+            <div className="bg-slate-100 border-1 border-dashed rounded-md w-full p-10 items-center text-center">
+              <label htmlFor="file-upload">
+                <div className="flex items-center justify-center p-2 m-2 h-20 w-20 mx-auto rounded-full bg-blue-100 cursor-pointer">
+                  <FaFileUpload className="text-xl mx-auto" />
+                </div>
+              </label>
+
+              <label
+                htmlFor="file-upload"
+                className="hidden md:block w-1/3 mx-auto bg-blue-500 p-2 rounded-md hover:bg-blue-400 cursor-pointer text-white transition"
+              >
+                Select File
+              </label>
+              <p className="hidden md:block text-slate-400 font-extralight text-xs m-2">
+                or drag and drop CSV files here
+              </p>
+              <input
+                id="file-upload"
+                className="hidden"
+                type="file"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+              />
+            </div>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-slate-100 border border-dashed mx-auto rounded-md w-full p-5 m-5">
+              {/* File info */}
+              <div className="flex items-center gap-2 min-w-0">
+                <FaRegFileAlt className="shrink-0" />
+
+                <div className="text-sm text-gray-700 min-w-0">
+                  {file ? (
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2">
+                      <span className="truncate max-w-full sm:max-w-xs">
+                        {file.name}
+                      </span>
+                      <span className="text-slate-400 whitespace-nowrap">
+                        ({formatFileSize(file.size)})
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-slate-400">No file selected</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Button */}
+              <button
+                type="submit"
+                className="w-full md:w-auto bg-slate-500 text-white px-4 py-2 rounded-md hover:cursor-pointer"
+              >
+                Upload and Process
+              </button>
+            </div>
+          </form>
+          {downloadUrl && (
+            <div className="text-xl font-thin">
+              <h2>Download your processed report:</h2>
+              <div className="flex justify-between border rounded-md bg-slate-100 p-5 text-center">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="rounded-md bg-slate-50 p-3">
+                    <FaFileAlt className="text-green-500" />
+                  </div>
+                  <span className="truncate font-medium">{filename}.html</span>
+                </div>
+                <a
+                  className="flex items-center gap-2 font-bold text-blue-500 hover:underline"
+                  href={downloadUrl}
+                  download={`${filename}.html`}
+                  onClick={() => setDownloadUrl("")}
+                >
+                  <span>Download</span>
+                  <IoMdDownload className="text-lg" />
+                </a>
+              </div>
+            </div>
+          )}
+        </div>
+        {/* Logs selection section */}
+        {console.log(file)}
+        {file && (
+          <div className="border border-black rounded-md bg-white w-2/3 mx-auto shadow-lg">
+            {logs.length > 0 && (
+              <>
+                {/* Header */}
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pt-5 px-3 pb-6 w-full">
+                  <h2 className="text-lg sm:text-xl font-bold">
+                    Select logs for analysis
+                  </h2>
+
+                  <div className="relative w-full md:w-64">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <input
+                      className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400 bg-slate-100"
+                      type="text"
+                      placeholder="Filter logs..."
+                      value={filtered}
+                      onChange={(e) => setFiltered(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="border-b pt-4 px-4 pb-4 w-full text-xs bg-slate-100">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
+                    <div
+                      className="flex items-center gap-2 text-base sm:text-lg hover:text-blue-500 cursor-pointer"
+                      onClick={() => setCheckedItems(logs)}
+                    >
+                      <BiSelectMultiple />
+                      <h2>Select All</h2>
+                    </div>
+
+                    <div
+                      className="flex items-center gap-2 text-base sm:text-lg hover:text-blue-500 cursor-pointer"
+                      onClick={() => setCheckedItems([])}
+                    >
+                      <VscClearAll />
+                      <h2>Clear All</h2>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Log list */}
+                <div className="max-h-64 overflow-y-auto border-b px-4 sm:px-8 min-h-0">
+                  {filterdLogs.map((log) => (
+                    <div key={log} className="flex gap-x-3 items-center py-1">
+                      <CheckBox
+                        log={log}
+                        checkedItems={checkedItems}
+                        handleCheckBoxChange={() => handleCheckboxChange(log)}
+                      />
+                      <h1 className="truncate text-sm sm:text-base">{log}</h1>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer */}
+                <div className="flex justify-end p-4">
+                  <p
+                    className="p-2 text-base sm:text-lg cursor-pointer hover:text-blue-500 hover:underline"
+                    onClick={() => setFile(null)}
+                  >
+                    Cancel
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+        <footer className="p-5 w-full sticky bottom-0 bg-slate-100">
+          <p className="text-center text-slate-400 font-extralight text-sm">
+            &copy; 2024 Your Company. All rights reserved.
+          </p>
+        </footer>
+      </div>
+    </>
   );
 }
