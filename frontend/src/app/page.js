@@ -1,9 +1,10 @@
 "use client";
 
 import { redirect, useRouter } from "next/navigation";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Papa from "papaparse";
 import CheckBox from "@/components/CheckBox";
+import DropZone from "@/components/DropZone";
 import { BiSelectMultiple } from "react-icons/bi";
 import { VscClearAll } from "react-icons/vsc";
 import {
@@ -82,11 +83,18 @@ export default function Home() {
     );
   };
 
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    setFile(selectedFile); // Correctly updates the state
-    extractLogOptions(selectedFile); // Use the selectedFile directly
-  };
+  {
+    /* Handle file change */
+  }
+
+  useEffect(() => {
+    if (file) {
+      extractLogOptions(file);
+    } else {
+      setLogs([]);
+      setCheckedItems([]);
+    }
+  }, [file]);
 
   const handleSubmit = async (e) => {
     setIsLoading(true);
@@ -185,32 +193,19 @@ export default function Home() {
           Upload File for Analysis
         </h1>
         {/* Upload and file section */}
-        <div className="border-1 border-solid border-black rounded-md bg-white w-2/3 shadow-lg p-10">
+        <div className="flex w-full md:w-2/3 lg:w-1/3 flex-col rounded-md border bg-white p-4 shadow-md">
           <form onSubmit={handleSubmit} className="">
-            <div className="bg-slate-100 border-1 border-dashed rounded-md w-full p-10 items-center text-center">
-              <label htmlFor="file-upload">
-                <div className="flex items-center justify-center p-2 m-2 h-20 w-20 mx-auto rounded-full bg-blue-100 cursor-pointer">
-                  <FaFileUpload className="text-xl mx-auto" />
-                </div>
-              </label>
+            <label htmlFor="file-upload" className="block cursor-pointer">
+              <DropZone file={file} setFile={setFile} />
+            </label>
 
-              <label
-                htmlFor="file-upload"
-                className="hidden md:block w-1/3 mx-auto bg-blue-500 p-2 rounded-md hover:bg-blue-400 cursor-pointer text-white transition"
-              >
-                Select File
-              </label>
-              <p className="hidden md:block text-slate-400 font-extralight text-xs m-2">
-                or drag and drop CSV files here
-              </p>
-              <input
-                id="file-upload"
-                className="hidden"
-                type="file"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-              />
-            </div>
+            <input
+              id="file-upload"
+              type="file"
+              className="hidden"
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-slate-100 border border-dashed mx-auto rounded-md w-full p-5 m-5">
               {/* File info */}
               <div className="flex items-center gap-2 min-w-0">
@@ -265,13 +260,11 @@ export default function Home() {
           )}
         </div>
         {/* Logs selection section */}
-        {console.log(file)}
         {file && (
-          <div className="border border-black rounded-md bg-white w-2/3 mx-auto shadow-lg">
+          <div className="flex w-full md:w-2/3 lg:w-1/3 border border-solid rounded-md bg-white  shadow-md">
             {logs.length > 0 && (
-              <>
-                {/* Header */}
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pt-5 px-3 pb-6 w-full">
+              <div className="w-full">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between pt-5 px-3 pb-6 w-full">
                   <h2 className="text-lg sm:text-xl font-bold">
                     Select logs for analysis
                   </h2>
@@ -288,51 +281,45 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="border-b pt-4 px-4 pb-4 w-full text-xs bg-slate-100">
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
-                    <div
-                      className="flex items-center gap-2 text-base sm:text-lg hover:text-blue-500 cursor-pointer"
-                      onClick={() => setCheckedItems(logs)}
-                    >
-                      <BiSelectMultiple />
-                      <h2>Select All</h2>
-                    </div>
-
-                    <div
-                      className="flex items-center gap-2 text-base sm:text-lg hover:text-blue-500 cursor-pointer"
-                      onClick={() => setCheckedItems([])}
-                    >
-                      <VscClearAll />
-                      <h2>Clear All</h2>
-                    </div>
+                <div className="flex gap-x-6 border-t border-b  bg-slate-100 w-full p-4">
+                  <div
+                    className="flex gap-x-2 hover:text-blue-500 hover:cursor-pointer"
+                    onClick={() => setCheckedItems(logs)}
+                  >
+                    <h2>Select All</h2>
+                    <BiSelectMultiple size={25} />
+                  </div>
+                  <div
+                    className="flex gap-x-2 hover:text-blue-500 hover:cursor-pointer"
+                    onClick={() => setCheckedItems([])}
+                  >
+                    <h2>Clear All</h2>
+                    <VscClearAll size={25} />
                   </div>
                 </div>
 
-                {/* Log list */}
-                <div className="max-h-64 overflow-y-auto border-b px-4 sm:px-8 min-h-0">
+                <div className="max-h-54 overflow-y-auto border-b px-4 sm:px-8 min-h-8">
                   {filterdLogs.map((log) => (
-                    <div key={log} className="flex gap-x-3 items-center py-1">
+                    <div key={log} className="flex items-center gap-x-3 p-1">
                       <CheckBox
                         log={log}
                         checkedItems={checkedItems}
                         handleCheckBoxChange={() => handleCheckboxChange(log)}
                       />
-                      <h1 className="truncate text-sm sm:text-base">{log}</h1>
+                      <span>{log}</span>
                     </div>
                   ))}
                 </div>
-
                 {/* Footer */}
                 <div className="flex justify-end p-4">
                   <p
                     className="p-2 text-base sm:text-lg cursor-pointer hover:text-blue-500 hover:underline"
-                    onClick={() => setFile(null)}
+                    onClick={() => setFiles([])}
                   >
                     Cancel
                   </p>
                 </div>
-              </>
+              </div>
             )}
           </div>
         )}
